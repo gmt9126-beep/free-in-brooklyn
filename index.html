@@ -118,6 +118,13 @@ h1, h2, h3, p { margin: 0; }
 .seg button[aria-pressed="true"] { background: var(--solid); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); font-weight: 600; }
 .panel-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px 16px; }
 .group { background: var(--solid); border-radius: 14px; overflow: hidden; }
+.zip { position: relative; display: flex; gap: 8px; }
+.zip .zin { position: relative; flex: 1; min-width: 0; }
+.zip .zin svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; }
+.zip input { width: 100%; background: var(--fill); border: 0; border-radius: 12px; padding: 0 12px 0 38px; height: 44px; font-size: 16px; font-variant-numeric: tabular-nums; }
+.zip input::placeholder { color: var(--label-2); }
+.zip button { height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+.zipmsg { margin: 6px 4px 0; font-size: 13px; color: var(--label-2); }
 .focusbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; margin-bottom: 8px; background: var(--fill); border-radius: 12px; font-size: 14px; }
 .linkbtn { background: none; border: 0; padding: 0; min-height: 44px; color: var(--accent); font-weight: 500; }
 
@@ -280,6 +287,16 @@ h1, h2, h3, p { margin: 0; }
     <aside class="panel" aria-label="Programs">
       <div class="panel-top" id="panelTop">
         <div><h1 id="panelTitle">Free programs</h1><p class="sub" id="panelSub" aria-live="polite"></p></div>
+        <div>
+          <form class="zip" id="zipForm" novalidate role="search" aria-label="Find programs by ZIP code">
+            <div class="zin">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              <input id="zip" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="Your ZIP code, e.g. 11215" aria-label="Your ZIP code" autocomplete="postal-code">
+            </div>
+            <button type="submit">Go</button>
+          </form>
+          <p class="zipmsg" id="zipMsg" role="status" aria-live="polite" hidden></p>
+        </div>
         <div class="search">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
           <input id="q" type="search" placeholder="Search programs, venues, neighborhoods" aria-label="Search programs" autocomplete="off">
@@ -2136,7 +2153,16 @@ h1, h2, h3, p { margin: 0; }
   ];
 
   /* ---------- state ---------- */
-  var state = { q: "", cat: "all", time: "any", view: "browse", selected: null, venueFocus: null, returnTo: "browse" };
+  var state = { q: "", cat: "all", time: "any", view: "browse", selected: null, venueFocus: null, returnTo: "browse", zip: null };
+  var ZIPS = {"11201":[40.6934,-73.9906,"Brooklyn Heights & Downtown"],"11203":[40.6495,-73.9344,"East Flatbush"],"11204":[40.6179,-73.9847,"Mapleton & Bensonhurst"],"11205":[40.6945,-73.9669,"Fort Greene & Clinton Hill"],"11206":[40.701,-73.9425,"Williamsburg & Bushwick"],"11207":[40.6708,-73.8942,"East New York"],"11208":[40.676,-73.873,"Cypress Hills"],"11209":[40.6248,-74.03,"Bay Ridge"],"11210":[40.6285,-73.9453,"Flatbush & Midwood"],"11211":[40.714,-73.9535,"Williamsburg"],"11212":[40.663,-73.9138,"Brownsville"],"11213":[40.6712,-73.9363,"Crown Heights"],"11214":[40.5995,-73.998,"Bath Beach & Bensonhurst"],"11215":[40.662,-73.986,"Park Slope"],"11216":[40.6785,-73.95,"Bed-Stuy"],"11217":[40.683,-73.9795,"Boerum Hill"],"11218":[40.643,-73.976,"Kensington"],"11219":[40.6335,-73.995,"Borough Park"],"11220":[40.641,-74.017,"Sunset Park"],"11221":[40.691,-73.9275,"Bushwick & Bed-Stuy"],"11222":[40.7265,-73.9475,"Greenpoint"],"11223":[40.597,-73.973,"Gravesend"],"11224":[40.5775,-73.989,"Coney Island"],"11225":[40.663,-73.955,"Crown Heights & Lefferts"],"11226":[40.646,-73.956,"Flatbush"],"11228":[40.616,-74.013,"Dyker Heights"],"11229":[40.601,-73.9437,"Marine Park & Homecrest"],"11230":[40.623,-73.966,"Midwood"],"11231":[40.6785,-74.001,"Carroll Gardens & Red Hook"],"11232":[40.656,-74.005,"Sunset Park & Greenwood Heights"],"11233":[40.671,-73.919,"Ocean Hill & Bed-Stuy"],"11234":[40.61,-73.913,"Flatlands & Mill Basin"],"11235":[40.585,-73.954,"Brighton Beach & Sheepshead Bay"],"11236":[40.637,-73.913,"Canarsie"],"11237":[40.704,-73.921,"Bushwick"],"11238":[40.677,-73.964,"Prospect Heights"],"11239":[40.649,-73.88,"New Lots & Starrett City"],"11249":[40.719,-73.962,"Williamsburg waterfront"]};
+  function venueZip(key) {
+    var v = VENUES[key]; if (v._z) return v._z;
+    var m = /NY (\d{5})/.exec(v.addr || ""); if (m) return (v._z = m[1]);
+    var best = null, bd = 1e9;
+    Object.keys(ZIPS).forEach(function (z) { var d = distKm(v.lat, v.lng, ZIPS[z][0], ZIPS[z][1]); if (d < bd) { bd = d; best = z; } });
+    return (v._z = best);
+  }
+  function distKm(a, b, c, d) { return Math.hypot((a - c) * 111.2, (b - d) * 84.3); }
   var starred = {};
   try { var raw = localStorage.getItem("fib-starred"); if (raw) { JSON.parse(raw).forEach(function (id) { starred[id] = true; }); } } catch (e) {}
   function saveStars() { try { localStorage.setItem("fib-starred", JSON.stringify(Object.keys(starred))); } catch (e) {} }
@@ -2151,19 +2177,21 @@ h1, h2, h3, p { margin: 0; }
   }
   function isToday(p) { return overlaps(p, TODAY, TODAY) && !p.ongoing; }
 
+  function zipDist(p) { var v = VENUES[p.venue], c = ZIPS[state.zip]; return c ? distKm(v.lat, v.lng, c[0], c[1]) * 0.621371 : 0; }
   function filtered() {
     var q = state.q.trim().toLowerCase();
     return PROGRAMS.filter(function (p) {
       if (state.cat !== "all" && p.cat !== state.cat) return false;
       if (state.time === "today" && !overlaps(p, TODAY, TODAY)) return false;
       if (state.time === "week" && !overlaps(p, TODAY, WEEK_END)) return false;
+      if (state.zip && venueZip(p.venue) !== state.zip) return false;
       if (q) {
         var v = VENUES[p.venue];
         var hay = (p.title + " " + p.org + " " + p.blurb + " " + v.name + " " + v.hood + " " + CATS[p.cat].label).toLowerCase();
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
-    }).sort(function (a, b) { var x = nextStart(a), y = nextStart(b); return x < y ? -1 : x > y ? 1 : a.title.localeCompare(b.title); });
+    }).sort(function (a, b) { if (state.zip) { var da = zipDist(a), db = zipDist(b); if (Math.abs(da - db) > 0.01) return da - db; } var x = nextStart(a), y = nextStart(b); return x < y ? -1 : x > y ? 1 : a.title.localeCompare(b.title); });
   }
 
   function starSVG(on, size) {
@@ -2193,7 +2221,7 @@ h1, h2, h3, p { margin: 0; }
     var pill = isToday(p) ? '<span class="pill today">Today</span>' : p.tag ? '<span class="pill">' + esc(p.tag) + "</span>" : p.ongoing ? '<span class="pill">Ongoing</span>' : "";
     return '<div class="item' + (state.selected === p.id ? " sel" : "") + '" data-open="' + p.id + '" style="--cat:var(' + CATS[p.cat].v + ')" tabindex="0" role="button" aria-label="' + esc(p.title + ", " + CATS[p.cat].label + ", " + v.name + ", " + p.when) + '">' +
       '<div class="ic-sq" aria-hidden="true">' + icon(p.cat, 22) + "</div>" +
-      '<div style="min-width:0"><h3>' + esc(p.title) + '</h3><div class="org">' + esc(v.name) + " &middot; " + esc(v.hood) + '</div><div class="when">' + pill + (CONDS[p.id] ? '<span class="pill cond">' + esc(CONDS[p.id][0]) + "</span>" : "") + esc(p.when) + "</div></div>" +
+      '<div style="min-width:0"><h3>' + esc(p.title) + '</h3><div class="org">' + esc(v.name) + " &middot; " + esc(v.hood) + (state.zip && ZIPS[state.zip] ? " &middot; " + zipDist(p).toFixed(1) + " mi" : "") + '</div><div class="when">' + pill + (CONDS[p.id] ? '<span class="pill cond">' + esc(CONDS[p.id][0]) + "</span>" : "") + esc(p.when) + "</div></div>" +
       '<button type="button" class="starbtn" data-star="' + p.id + '" aria-pressed="' + on + '" aria-label="' + (on ? "Remove star from " : "Star ") + esc(p.title) + '">' + starSVG(on, 22) + "</button></div>";
   }
 
@@ -2215,11 +2243,12 @@ h1, h2, h3, p { margin: 0; }
     $("panelTitle").textContent = "Free programs";
     list = filtered();
     if (state.venueFocus) list = list.filter(function (p) { return p.venue === state.venueFocus; });
-    $("panelSub").textContent = list.length + (list.length === 1 ? " program" : " programs") + " across Brooklyn";
+    $("panelSub").textContent = list.length + (list.length === 1 ? " program" : " programs") + (state.zip ? " in or near ZIP " + state.zip : " across Brooklyn");
     var h = "";
+    if (state.zip) h += '<div class="focusbar"><span>ZIP ' + state.zip + (ZIPS[state.zip] ? " &middot; " + esc(ZIPS[state.zip][2]) : "") + ', nearest first</span><button type="button" class="linkbtn" data-clear-zip="1">Clear</button></div>';
     if (state.venueFocus) h += '<div class="focusbar"><span>At ' + esc(VENUES[state.venueFocus].name) + '</span><button type="button" class="linkbtn" data-clear-venue="1">Show all</button></div>';
     h += list.length ? '<div class="group">' + list.map(itemHTML).join("") + "</div>" :
-      '<div class="empty"><b>No programs match</b><span>Try another type or time, or clear the search.</span><button type="button" class="btn primary" data-reset="1">Clear filters</button></div>';
+      '<div class="empty"><b>No programs match</b><span>' + (state.zip ? "Nothing is listed in ZIP " + state.zip + " with these filters. Try another type or time, or clear the ZIP." : "Try another type or time, or clear the search.") + '</span><button type="button" class="btn primary" data-reset="1">Clear filters</button></div>';
     body.innerHTML = h;
   }
 
@@ -2402,9 +2431,9 @@ h1, h2, h3, p { margin: 0; }
     view.tx = cx - (cx - view.tx) * ratio; view.ty = cy - (cy - view.ty) * ratio; view.k = nk; touched = true; apply();
   }
   var anim = null;
-  function flyTo(wx, wy, k) {
+  function flyTo(wx, wy, k, exact) {
     var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var tk = Math.max(view.k, k), aw = size.w - inset, ttx = inset + aw / 2 - wx * tk, tty = size.h * 0.52 - wy * tk;
+    var tk = exact ? k : Math.max(view.k, k), aw = size.w - inset, ttx = inset + aw / 2 - wx * tk, tty = size.h * 0.52 - wy * tk;
     touched = true;
     if (reduce) { view.k = tk; view.tx = ttx; view.ty = tty; apply(); return; }
     var s = { k: view.k, tx: view.tx, ty: view.ty }, t0 = performance.now(), dur = 450;
@@ -2537,7 +2566,8 @@ h1, h2, h3, p { margin: 0; }
     if (t.closest("[data-back]")) { closeDetail(); return; }
     var cp = t.closest("[data-copy]"); if (cp) { copyText(cp.getAttribute("data-copy")); return; }
     if (t.closest("[data-clear-venue]")) { state.venueFocus = null; refresh(); return; }
-    if (t.closest("[data-reset]")) { state.q = ""; state.cat = "all"; state.time = "any"; state.venueFocus = null; $("q").value = ""; refresh(); return; }
+    if (t.closest("[data-clear-zip]")) { clearZip(); return; }
+    if (t.closest("[data-reset]")) { state.q = ""; state.cat = "all"; state.time = "any"; state.venueFocus = null; $("q").value = ""; if (state.zip) { clearZip(); return; } refresh(); return; }
     var vw = t.closest("[data-view]"); if (vw) { state.view = vw.getAttribute("data-view"); refresh(); return; }
     var it = t.closest("[data-open]"); if (it) openProgram(it.getAttribute("data-open"));
   });
@@ -2546,7 +2576,22 @@ h1, h2, h3, p { margin: 0; }
   });
   catChips.addEventListener("click", function (e) { var b = e.target.closest("[data-cat]"); if (b) { state.cat = b.getAttribute("data-cat"); state.venueFocus = null; refresh(); } });
   timeChips.addEventListener("click", function (e) { var b = e.target.closest("[data-time]"); if (b) { state.time = b.getAttribute("data-time"); state.venueFocus = null; refresh(); } });
-  $("q").addEventListener("input", function (e) { state.q = e.target.value; state.venueFocus = null; renderPanel(); renderPins(); });
+  function zipMsg(t) { var m = $("zipMsg"); m.textContent = t || ""; m.hidden = !t; }
+  function clearZip() { state.zip = null; $("zip").value = ""; zipMsg(""); state.venueFocus = null; refresh(); touched = false; fit(); }
+  function applyZip(raw) {
+    var z = String(raw || "").trim();
+    if (!/^\d{5}$/.test(z)) { zipMsg("Enter a 5-digit ZIP code, like 11215."); return false; }
+    if (!ZIPS[z]) { zipMsg(z + " isn't a Brooklyn ZIP code this map covers. Try one that starts with 112, like 11215."); return false; }
+    state.zip = z; state.selected = null; state.view = "browse"; state.venueFocus = null; state.q = ""; $("q").value = ""; $("zip").value = z;
+    refresh(); body.scrollTop = 0;
+    var n = filtered().length, c = ZIPS[z], pt = proj(c[0], c[1]);
+    zipMsg(n ? "" : "No free programs are listed in or near " + z + " yet.");
+    flyTo(pt[0], pt[1], k0 * 3.4, true);
+    return true;
+  }
+  $("zipForm").addEventListener("submit", function (e) { e.preventDefault(); applyZip($("zip").value); });
+  $("zip").addEventListener("input", function (e) { var v = e.target.value.replace(/\D/g, "").slice(0, 5); if (v !== e.target.value) e.target.value = v; if (!v) { if (state.zip) clearZip(); else zipMsg(""); } else if (!state.zip) zipMsg(""); });
+  $("q").addEventListener("input", function (e) { if (/^\d{5}$/.test(e.target.value.trim()) && ZIPS[e.target.value.trim()]) { applyZip(e.target.value); return; } state.q = e.target.value; state.venueFocus = null; renderPanel(); renderPins(); });
   $("starNav").addEventListener("click", function () { state.selected = null; state.venueFocus = null; state.view = state.view === "starred" ? "browse" : "starred"; refresh(); });
   function setPop(open) { $("profilePop").hidden = !open; $("profileBtn").setAttribute("aria-expanded", String(open)); }
   $("profileBtn").addEventListener("click", function (e) { e.stopPropagation(); setPop($("profilePop").hidden); });
@@ -2554,7 +2599,7 @@ h1, h2, h3, p { margin: 0; }
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { setPop(false); if (state.selected) closeDetail(); } });
   $("popView").addEventListener("click", function () { setPop(false); state.selected = null; state.view = "starred"; refresh(); });
   document.addEventListener("click", function (e) { var n = e.target.closest("[data-nav]"); if (n && n.getAttribute("data-nav") === "soon") { setPop(false); toast("Not part of this prototype yet"); } });
-  $("brandLink").addEventListener("click", function (e) { e.preventDefault(); state.selected = null; state.view = "browse"; state.venueFocus = null; refresh(); touched = false; fit(); });
+  $("brandLink").addEventListener("click", function (e) { e.preventDefault(); state.zip = null; $("zip").value = ""; zipMsg(""); state.selected = null; state.view = "browse"; state.venueFocus = null; refresh(); touched = false; fit(); });
 
   GEO = JSON.parse(GEO);
   buildChips(); drawWorld(); fit(); refresh();
