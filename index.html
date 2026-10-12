@@ -190,12 +190,12 @@ h1, h2, h3, p { margin: 0; }
 .m-road { fill: none; stroke: var(--m-road); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .m-roadedge { fill: none; stroke: var(--m-road-edge); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .m-hwy { fill: none; stroke: var(--m-hwy); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.t { text-anchor: middle; pointer-events: none; paint-order: stroke; stroke-linejoin: round; font-family: var(--font); }
-.t-n { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; fill: var(--m-text); stroke: var(--m-land); stroke-width: 3px; }
-.t-q { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; fill: var(--m-text-2); stroke: var(--m-other); stroke-width: 3px; }
-.t-b { font-size: 18px; font-weight: 700; letter-spacing: .12em; fill: var(--m-text); stroke: var(--m-land); stroke-width: 4px; }
+.t { text-anchor: middle; text-rendering: geometricPrecision; font-kerning: normal; font-variant-numeric: normal; pointer-events: none; paint-order: stroke; stroke-linejoin: round; font-family: var(--font); }
+.t-n { font-size: 11px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase; fill: var(--m-text); stroke: var(--m-land); stroke-width: 3px; }
+.t-q { font-size: 11px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase; fill: var(--m-text-2); stroke: var(--m-other); stroke-width: 3px; }
+.t-b { font-size: 18px; font-weight: 700; letter-spacing: .06em; fill: var(--m-text); stroke: var(--m-land); stroke-width: 4px; }
 .t-c { font-size: 26px; font-weight: 700; letter-spacing: -.01em; fill: var(--m-text); stroke: var(--m-other); stroke-width: 4px; }
-.t-w { font-size: 12px; font-style: italic; letter-spacing: .14em; fill: var(--m-water-text); stroke: none; }
+.t-w { font-size: 12px; font-style: italic; letter-spacing: .08em; fill: var(--m-water-text); stroke: none; }
 .t-p { font-size: 12px; font-weight: 500; fill: var(--m-park-text); stroke: var(--m-land); stroke-width: 3px; }
 
 .cluster { cursor: pointer; }
